@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import type { Cliente, Profissional, Servico } from '@/types'
+import type { Cliente, Profissional } from '@/types'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,17 +17,15 @@ export default function NovoAgendamentoPage() {
 
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [profissionais, setProfissionais] = useState<Profissional[]>([])
-  const [servicos, setServicos] = useState<Servico[]>([])
 
   const [clienteId, setClienteId] = useState('')
   const [clienteQuery, setClienteQuery] = useState('')
   const [clienteOpen, setClienteOpen] = useState(false)
   const [profissionalId, setProfissionalId] = useState('')
-  const [servicoId, setServicoId] = useState('')
+  const [servico, setServico] = useState('')
   const [data, setData] = useState('')
   const [hora, setHora] = useState('')
   const [observacoes, setObservacoes] = useState('')
-  const [valorCobrado, setValorCobrado] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -36,19 +34,11 @@ export default function NovoAgendamentoPage() {
     Promise.all([
       supabase.from('clientes').select('*').eq('ativo', true).order('nome'),
       supabase.from('profissionais').select('*').eq('ativo', true).order('nome'),
-      supabase.from('servicos').select('*').eq('ativo', true).order('nome'),
-    ]).then(([{ data: c }, { data: p }, { data: s }]) => {
+    ]).then(([{ data: c }, { data: p }]) => {
       setClientes((c ?? []) as Cliente[])
       setProfissionais((p ?? []) as Profissional[])
-      setServicos((s ?? []) as Servico[])
     })
   }, [])
-
-  function handleServicoChange(id: string) {
-    setServicoId(id)
-    const servico = servicos.find(s => s.id === id)
-    setValorCobrado(servico ? Number(servico.preco) : null)
-  }
 
   const clienteSelecionado = clientes.find(c => c.id === clienteId)
   const clientesFiltrados = clientes.filter(c =>
@@ -58,7 +48,7 @@ export default function NovoAgendamentoPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (!clienteId || !profissionalId || !servicoId || !data || !hora) {
+    if (!clienteId || !profissionalId || !data || !hora) {
       setError('Preencha todos os campos obrigatórios.')
       return
     }
@@ -67,10 +57,10 @@ export default function NovoAgendamentoPage() {
     const { error: err } = await supabase.from('agendamentos').insert({
       cliente_id: clienteId,
       profissional_id: profissionalId,
-      servico_id: servicoId,
+      servico_realizado: servico || null,
       data_hora: `${data}T${hora}:00`,
       status: 'agendado',
-      valor_cobrado: valorCobrado ?? 0,
+      valor_cobrado: 0,
       observacoes: observacoes || null,
     })
     setLoading(false)
@@ -131,7 +121,7 @@ export default function NovoAgendamentoPage() {
             {/* Profissional */}
             <div className="space-y-2">
               <Label>Profissional <span className="text-red-500">*</span></Label>
-              <Select value={profissionalId} onValueChange={(v) => setProfissionalId(v ?? '')}>
+              <Select value={profissionalId} onValueChange={v => setProfissionalId(v ?? '')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o profissional..." />
                 </SelectTrigger>
@@ -145,30 +135,15 @@ export default function NovoAgendamentoPage() {
               </Select>
             </div>
 
-            {/* Serviço */}
+            {/* Serviço — texto livre */}
             <div className="space-y-2">
-              <Label>Serviço <span className="text-red-500">*</span></Label>
-              <Select value={servicoId} onValueChange={(v) => { if (v) handleServicoChange(v) }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o serviço..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {servicos.map(s => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.nome} — R$ {Number(s.preco).toFixed(2)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Serviço</Label>
+              <Input
+                placeholder="Ex: Harmonização facial, limpeza de pele, massagem..."
+                value={servico}
+                onChange={e => setServico(e.target.value)}
+              />
             </div>
-
-            {/* Valor auto-preenchido */}
-            {valorCobrado !== null && (
-              <div className="space-y-2">
-                <Label>Valor do Serviço</Label>
-                <Input value={`R$ ${valorCobrado.toFixed(2)}`} readOnly className="bg-gray-50 text-gray-500 cursor-default" />
-              </div>
-            )}
 
             {/* Data e Hora */}
             <div className="grid grid-cols-2 gap-4">

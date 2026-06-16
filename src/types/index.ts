@@ -46,30 +46,12 @@ export type Profissional = {
   created_at: string
 }
 
-export type Servico = {
-  id: string
-  nome: string
-  descricao: string | null
-  duracao_minutos: number
-  preco: number
-  ativo: boolean
-  created_at: string
-}
-
-export type ServicoItem = {
-  id: string
-  servico_id: string
-  produto_id: string
-  quantidade_usada: number
-  produto?: Produto
-  servico?: Servico
-}
-
 export type Agendamento = {
   id: string
   cliente_id: string
   profissional_id: string
-  servico_id: string
+  servico_id: string | null
+  servico_realizado: string | null
   data_hora: string
   status: 'agendado' | 'confirmado' | 'concluido' | 'cancelado'
   valor_cobrado: number
@@ -79,7 +61,7 @@ export type Agendamento = {
   updated_at: string
   cliente?: Cliente
   profissional?: Profissional
-  servico?: Servico
+  servico?: { nome: string }
 }
 
 export type VendaItem = {

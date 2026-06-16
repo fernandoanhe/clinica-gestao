@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import type { Cliente, Produto, Servico } from '@/types'
+import type { Cliente, Produto } from '@/types'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,7 +15,7 @@ import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 type ItemRow = {
   id: string
   tipo: 'produto' | 'servico'
-  entityId: string
+  entityId: string   // produto_id quando tipo=produto, vazio para servico
   descricao: string
   quantidade: string
   preco_unitario: string
@@ -39,7 +39,6 @@ export default function NovaVendaPage() {
 
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [produtos, setProdutos] = useState<Produto[]>([])
-  const [servicos, setServicos] = useState<Servico[]>([])
 
   const [clienteId, setClienteId] = useState('')
   const [clienteQuery, setClienteQuery] = useState('')
@@ -64,11 +63,9 @@ export default function NovaVendaPage() {
     Promise.all([
       supabase.from('clientes').select('*').eq('ativo', true).order('nome'),
       supabase.from('produtos').select('*').eq('ativo', true).order('nome'),
-      supabase.from('servicos').select('*').eq('ativo', true).order('nome'),
-    ]).then(([{ data: c }, { data: p }, { data: s }]) => {
+    ]).then(([{ data: c }, { data: p }]) => {
       setClientes((c ?? []) as Cliente[])
       setProdutos((p ?? []) as Produto[])
-      setServicos((s ?? []) as Servico[])
     })
   }, [])
 
@@ -88,14 +85,9 @@ export default function NovaVendaPage() {
       if (field === 'tipo') {
         return { ...item, tipo: value as 'produto' | 'servico', entityId: '', descricao: '', preco_unitario: '' }
       }
-      if (field === 'entityId') {
-        if (item.tipo === 'produto') {
-          const p = produtos.find(p => p.id === value)
-          return { ...item, entityId: value, descricao: p?.nome ?? '', preco_unitario: p ? String(p.custo_unitario) : '' }
-        } else {
-          const s = servicos.find(s => s.id === value)
-          return { ...item, entityId: value, descricao: s?.nome ?? '', preco_unitario: s ? String(s.preco) : '' }
-        }
+      if (field === 'entityId' && item.tipo === 'produto') {
+        const p = produtos.find(p => p.id === value)
+        return { ...item, entityId: value, descricao: p?.nome ?? '', preco_unitario: p ? String(p.custo_unitario) : '' }
       }
       return { ...item, [field]: value }
     }))
@@ -145,7 +137,10 @@ export default function NovaVendaPage() {
     if (!clienteId) { setError('Selecione um cliente.'); return }
     if (items.length === 0) { setError('Adicione pelo menos um item.'); return }
     for (const item of items) {
-      if (!item.entityId) { setError('Selecione o produto/serviço em todos os itens.'); return }
+      if (item.tipo === 'produto' && !item.entityId) {
+        setError('Selecione o produto em todos os itens do tipo produto.'); return
+      }
+      if (!item.descricao.trim()) { setError('Informe a descrição em todos os itens.'); return }
       if ((Number(item.quantidade) || 0) <= 0) { setError('Quantidade deve ser maior que zero.'); return }
       if ((Number(item.preco_unitario) || 0) <= 0) { setError('Preço deve ser maior que zero.'); return }
     }
@@ -183,7 +178,7 @@ export default function NovaVendaPage() {
         venda_id: venda.id,
         tipo: i.tipo,
         produto_id: i.tipo === 'produto' ? i.entityId : null,
-        servico_id: i.tipo === 'servico' ? i.entityId : null,
+        servico_id: null,
         descricao: i.descricao,
         quantidade: Number(i.quantidade),
         preco_unitario: Number(i.preco_unitario),
@@ -268,9 +263,8 @@ export default function NovaVendaPage() {
             <CardTitle className="text-base">Itens da Venda</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {/* Header labels */}
-            <div className="hidden md:grid md:grid-cols-[120px_1fr_80px_110px_90px_32px] gap-2 px-0.5">
-              {['Tipo', 'Produto / Serviço', 'Qtd', 'Preço Unit.', 'Subtotal', ''].map(h => (
+            <div className="hidden md:grid md:grid-cols-[110px_1fr_80px_110px_90px_32px] gap-2 px-0.5">
+              {['Tipo', 'Produto / Descrição', 'Qtd', 'Preço Unit.', 'Subtotal', ''].map(h => (
                 <span key={h} className="text-xs text-gray-400 font-medium">{h}</span>
               ))}
             </div>
@@ -278,11 +272,11 @@ export default function NovaVendaPage() {
             {items.map(item => {
               const subtotal = (Number(item.quantidade) || 0) * (Number(item.preco_unitario) || 0)
               return (
-                <div key={item.id} className="grid grid-cols-[120px_1fr_80px_110px_90px_32px] gap-2 items-center">
+                <div key={item.id} className="grid grid-cols-[110px_1fr_80px_110px_90px_32px] gap-2 items-center">
                   <Select
                     key={`tipo-${item.id}`}
                     value={item.tipo}
-                    onValueChange={(v) => updateItem(item.id, 'tipo', v ?? 'servico')}
+                    onValueChange={v => updateItem(item.id, 'tipo', v ?? 'servico')}
                   >
                     <SelectTrigger className="h-9 text-sm">
                       <SelectValue />
@@ -293,29 +287,30 @@ export default function NovaVendaPage() {
                     </SelectContent>
                   </Select>
 
-                  <Select
-                    key={`entity-${item.id}-${item.tipo}`}
-                    value={item.entityId}
-                    onValueChange={(v) => { if (v) updateItem(item.id, 'entityId', v) }}
-                  >
-                    <SelectTrigger className="h-9 text-sm">
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {item.tipo === 'produto'
-                        ? produtos.map(p => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.nome}
-                          </SelectItem>
-                        ))
-                        : servicos.map(s => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.nome}
-                          </SelectItem>
-                        ))
-                      }
-                    </SelectContent>
-                  </Select>
+                  {item.tipo === 'produto' ? (
+                    <Select
+                      key={`entity-${item.id}`}
+                      value={item.entityId}
+                      onValueChange={v => { if (v) updateItem(item.id, 'entityId', v) }}
+                    >
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue placeholder="Selecione o produto..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {produtos.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      key={`desc-${item.id}`}
+                      className="h-9 text-sm"
+                      placeholder="Descrição do serviço..."
+                      value={item.descricao}
+                      onChange={e => updateItem(item.id, 'descricao', e.target.value)}
+                    />
+                  )}
 
                   <Input
                     type="number" min="0.01" step="0.01"
@@ -407,7 +402,7 @@ export default function NovaVendaPage() {
               </div>
               <div className="space-y-1 w-36">
                 <Label className="text-xs">Pagamento</Label>
-                <Select value={formaParcela} onValueChange={(v) => setFormaParcela(v ?? 'pix')}>
+                <Select value={formaParcela} onValueChange={v => setFormaParcela(v ?? 'pix')}>
                   <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
@@ -433,7 +428,6 @@ export default function NovaVendaPage() {
               </Button>
             </div>
 
-            {/* Linhas de pagamento */}
             {pagamentos.length > 0 && (
               <div className="space-y-2">
                 <div className="hidden md:grid md:grid-cols-[1fr_110px_140px_32px] gap-2 px-0.5">
@@ -446,7 +440,7 @@ export default function NovaVendaPage() {
                     <Select
                       key={`fp-${pag.id}`}
                       value={pag.forma_pagamento}
-                      onValueChange={(v) => updatePag(pag.id, 'forma_pagamento', v ?? '')}
+                      onValueChange={v => updatePag(pag.id, 'forma_pagamento', v ?? '')}
                     >
                       <SelectTrigger className="h-9 text-sm">
                         <SelectValue placeholder="Selecione..." />

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import type { Agendamento } from '@/types'
+import type { Agendamento, Produto } from '@/types'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, CalendarDays } from 'lucide-react'
+import { Plus, Trash2, CalendarDays } from 'lucide-react'
 
 const STATUS_COLORS: Record<string, string> = {
   agendado:  'bg-blue-100 text-blue-700 border-blue-200',
@@ -34,13 +34,19 @@ const PAGAMENTO_LABELS: Record<string, string> = {
   debito: 'Débito',
 }
 
+type ProdutoUsado = { uid: string; produto_id: string; quantidade: string }
+function uid() { return String(Date.now() + Math.random()) }
+
 export default function AgendamentosPage() {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([])
+  const [produtos, setProdutos] = useState<Produto[]>([])
   const [filtroStatus, setFiltroStatus] = useState('todos')
   const [loading, setLoading] = useState(true)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [agendamentoAtivo, setAgendamentoAtivo] = useState<Agendamento | null>(null)
+  const [servicoRealizado, setServicoRealizado] = useState('')
+  const [produtosUsados, setProdutosUsados] = useState<ProdutoUsado[]>([])
   const [formaPagamento, setFormaPagamento] = useState('')
   const [valorCobrado, setValorCobrado] = useState('')
   const [salvando, setSalvando] = useState(false)
@@ -50,13 +56,18 @@ export default function AgendamentosPage() {
     setLoading(true)
     const { data } = await supabase
       .from('agendamentos')
-      .select('*, cliente:clientes(nome), profissional:profissionais(nome), servico:servicos(nome, preco)')
+      .select('*, cliente:clientes(nome), profissional:profissionais(nome), servico:servicos(nome)')
       .order('data_hora', { ascending: false })
     setAgendamentos((data ?? []) as Agendamento[])
     setLoading(false)
   }
 
-  useEffect(() => { loadAgendamentos() }, [])
+  useEffect(() => {
+    loadAgendamentos()
+    createClient()
+      .from('produtos').select('*').eq('ativo', true).order('nome')
+      .then(({ data }) => setProdutos((data ?? []) as Produto[]))
+  }, [])
 
   const hoje = new Date().toLocaleDateString('pt-BR')
   const agendamentosHoje = agendamentos.filter(
@@ -80,25 +91,72 @@ export default function AgendamentosPage() {
 
   function abrirConcluir(ag: Agendamento) {
     setAgendamentoAtivo(ag)
+    setServicoRealizado(ag.servico_realizado ?? ag.servico?.nome ?? '')
+    setProdutosUsados([])
     setFormaPagamento('')
-    setValorCobrado(String(ag.servico?.preco ?? ''))
+    setValorCobrado(String(ag.valor_cobrado ?? '0'))
     setModalOpen(true)
+  }
+
+  function fecharModal() {
+    setModalOpen(false)
+    setAgendamentoAtivo(null)
+  }
+
+  function addProduto() {
+    setProdutosUsados(prev => [...prev, { uid: uid(), produto_id: '', quantidade: '1' }])
+  }
+
+  function updateProduto(id: string, field: 'produto_id' | 'quantidade', value: string) {
+    setProdutosUsados(prev => prev.map(p => p.uid === id ? { ...p, [field]: value } : p))
+  }
+
+  function removeProduto(id: string) {
+    setProdutosUsados(prev => prev.filter(p => p.uid !== id))
   }
 
   async function concluir() {
     if (!agendamentoAtivo || !formaPagamento) return
     setSalvando(true)
     const supabase = createClient()
-    await supabase.from('agendamentos').update({
+
+    const { error: errAg } = await supabase.from('agendamentos').update({
       status: 'concluido',
+      servico_realizado: servicoRealizado || null,
       forma_pagamento: formaPagamento,
       valor_cobrado: Number(valorCobrado),
     }).eq('id', agendamentoAtivo.id)
+
+    if (errAg) { setSalvando(false); return }
+
+    for (const p of produtosUsados) {
+      if (!p.produto_id || !(Number(p.quantidade) > 0)) continue
+      const qty = Number(p.quantidade)
+
+      await supabase.from('movimentacoes_estoque').insert({
+        produto_id: p.produto_id,
+        tipo: 'saida',
+        quantidade: qty,
+        motivo: 'Atendimento concluído',
+        agendamento_id: agendamentoAtivo.id,
+      })
+
+      const { data: prod } = await supabase
+        .from('produtos').select('quantidade_atual').eq('id', p.produto_id).single()
+      if (prod) {
+        await supabase.from('produtos').update({
+          quantidade_atual: Math.max(0, prod.quantidade_atual - qty),
+        }).eq('id', p.produto_id)
+      }
+    }
+
     setSalvando(false)
-    setModalOpen(false)
-    setAgendamentoAtivo(null)
+    fecharModal()
     loadAgendamentos()
   }
+
+  const nomeProcedimento = (a: Agendamento) =>
+    a.servico_realizado ?? a.servico?.nome ?? '—'
 
   const statusFiltros = ['todos', 'agendado', 'confirmado', 'concluido', 'cancelado']
 
@@ -131,7 +189,7 @@ export default function AgendamentosPage() {
                     {new Date(a.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                   <span className="text-blue-900 font-medium">{a.cliente?.nome ?? '—'}</span>
-                  <span className="text-blue-600">· {a.servico?.nome ?? '—'}</span>
+                  <span className="text-blue-600">· {nomeProcedimento(a)}</span>
                   <span className={`ml-auto px-2 py-0.5 rounded-full text-xs border shrink-0 ${STATUS_COLORS[a.status]}`}>
                     {STATUS_LABELS[a.status]}
                   </span>
@@ -192,7 +250,7 @@ export default function AgendamentosPage() {
                   </span>
                 </TableCell>
                 <TableCell>{a.cliente?.nome ?? '—'}</TableCell>
-                <TableCell>{a.servico?.nome ?? '—'}</TableCell>
+                <TableCell>{nomeProcedimento(a)}</TableCell>
                 <TableCell>{a.profissional?.nome ?? '—'}</TableCell>
                 <TableCell>
                   <span className={`px-2 py-0.5 rounded-full text-xs border font-medium ${STATUS_COLORS[a.status]}`}>
@@ -230,15 +288,82 @@ export default function AgendamentosPage() {
       </Card>
 
       {/* Modal Concluir */}
-      <Dialog open={modalOpen} onOpenChange={open => { if (!open) { setModalOpen(false); setAgendamentoAtivo(null) } }}>
-        <DialogContent>
+      <Dialog open={modalOpen} onOpenChange={open => { if (!open) fecharModal() }}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Concluir Agendamento</DialogTitle>
           </DialogHeader>
+
           <div className="space-y-4 py-2">
+            {/* Serviço realizado */}
             <div className="space-y-2">
-              <Label>Forma de Pagamento</Label>
-              <Select value={formaPagamento} onValueChange={(v) => setFormaPagamento(v ?? '')}>
+              <Label>Serviço realizado</Label>
+              <Input
+                placeholder="Ex: Harmonização facial, limpeza de pele..."
+                value={servicoRealizado}
+                onChange={e => setServicoRealizado(e.target.value)}
+              />
+            </div>
+
+            {/* Produtos utilizados */}
+            <div className="space-y-2">
+              <Label>Produtos utilizados</Label>
+              {produtosUsados.length > 0 && (
+                <div className="space-y-2">
+                  {produtosUsados.map(p => (
+                    <div key={p.uid} className="grid grid-cols-[1fr_80px_32px] gap-2 items-center">
+                      <Select
+                        value={p.produto_id}
+                        onValueChange={v => updateProduto(p.uid, 'produto_id', v ?? '')}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue placeholder="Selecione o produto..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {produtos.map(prod => (
+                            <SelectItem key={prod.id} value={prod.id}>
+                              {prod.nome}{' '}
+                              <span className="text-gray-400">
+                                ({prod.quantidade_atual} {prod.unidade})
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="number" min="0.01" step="0.01"
+                        className="h-8 text-sm"
+                        value={p.quantidade}
+                        onChange={e => updateProduto(p.uid, 'quantidade', e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeProduto(p.uid)}
+                        className="h-8 w-8 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {produtosUsados.length > 0 && (
+                    <div className="grid grid-cols-[1fr_80px_32px] gap-2 px-0.5 -mt-1">
+                      <span className="text-xs text-gray-400">Produto</span>
+                      <span className="text-xs text-gray-400">Qtd</span>
+                      <span />
+                    </div>
+                  )}
+                </div>
+              )}
+              <Button type="button" variant="outline" size="sm" onClick={addProduto}>
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                Adicionar produto
+              </Button>
+            </div>
+
+            {/* Pagamento */}
+            <div className="space-y-2">
+              <Label>Forma de Pagamento <span className="text-red-500">*</span></Label>
+              <Select value={formaPagamento} onValueChange={v => setFormaPagamento(v ?? '')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
@@ -250,15 +375,19 @@ export default function AgendamentosPage() {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
               <Label>Valor Cobrado (R$)</Label>
-              <Input type="number" step="0.01" min="0" value={valorCobrado} onChange={e => setValorCobrado(e.target.value)} />
+              <Input
+                type="number" step="0.01" min="0"
+                value={valorCobrado}
+                onChange={e => setValorCobrado(e.target.value)}
+              />
             </div>
           </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setModalOpen(false); setAgendamentoAtivo(null) }}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={fecharModal}>Cancelar</Button>
             <Button onClick={concluir} disabled={!formaPagamento || salvando}>
               {salvando ? 'Salvando...' : 'Confirmar Conclusão'}
             </Button>
