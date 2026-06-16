@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, DollarSign, Calendar, BarChart2, LogOut, Users, UserCheck, Scissors } from 'lucide-react'
+import { LayoutDashboard, Package, DollarSign, Calendar, BarChart2, LogOut, Users, UserCheck, Scissors, History } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -12,6 +12,7 @@ const nav = [
   { href: '/profissionais', label: 'Profissionais', icon: UserCheck },
   { href: '/servicos', label: 'Serviços', icon: Scissors },
   { href: '/estoque', label: 'Estoque', icon: Package },
+  { href: '/estoque/movimentacoes', label: 'Movimentações', icon: History, sub: true },
   { href: '/financeiro', label: 'Financeiro', icon: DollarSign },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart2 },
 ]
@@ -33,17 +34,17 @@ export default function Sidebar() {
         <p className="text-xs text-gray-400 mt-0.5">Sistema de gestão</p>
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {nav.map(({ href, label, icon: Icon }) => {
+        {nav.map(({ href, label, icon: Icon, sub }) => {
           const active = href === '/' ? pathname === href : pathname.startsWith(href)
           return (
             <Link
               key={href}
               href={href}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                active ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'
-              }`}
+                sub ? 'ml-3 py-1.5' : ''
+              } ${active ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
             >
-              <Icon size={16} />
+              <Icon size={sub ? 14 : 16} />
               {label}
             </Link>
           )
