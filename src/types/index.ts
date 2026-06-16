@@ -82,6 +82,44 @@ export type Agendamento = {
   servico?: Servico
 }
 
+export type VendaItem = {
+  id: string
+  venda_id: string
+  tipo: 'produto' | 'servico'
+  produto_id: string | null
+  servico_id: string | null
+  descricao: string
+  quantidade: number
+  preco_unitario: number
+  subtotal: number
+}
+
+export type VendaPagamento = {
+  id: string
+  venda_id: string
+  forma_pagamento: 'dinheiro' | 'pix' | 'credito' | 'debito'
+  valor: number
+  data_vencimento: string
+  data_pagamento: string | null
+  status: 'pendente' | 'pago' | 'cancelado'
+  created_at: string
+}
+
+export type Venda = {
+  id: string
+  cliente_id: string
+  status: 'pendente' | 'pago' | 'parcialmente_pago' | 'cancelado'
+  total: number
+  desconto: number
+  total_final: number
+  observacoes: string | null
+  created_at: string
+  updated_at: string
+  cliente?: { nome: string }
+  venda_itens?: VendaItem[]
+  venda_pagamentos?: VendaPagamento[]
+}
+
 export type Transacao = {
   id: string
   tipo: 'receita' | 'despesa'
