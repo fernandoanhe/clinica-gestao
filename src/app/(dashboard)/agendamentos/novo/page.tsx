@@ -4,24 +4,21 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import type { Cliente, Profissional } from '@/types'
+import type { Cliente } from '@/types'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft } from 'lucide-react'
 
 export default function NovoAgendamentoPage() {
   const router = useRouter()
 
   const [clientes, setClientes] = useState<Cliente[]>([])
-  const [profissionais, setProfissionais] = useState<Profissional[]>([])
 
   const [clienteId, setClienteId] = useState('')
   const [clienteQuery, setClienteQuery] = useState('')
   const [clienteOpen, setClienteOpen] = useState(false)
-  const [profissionalId, setProfissionalId] = useState('')
   const [servico, setServico] = useState('')
   const [data, setData] = useState('')
   const [hora, setHora] = useState('')
@@ -31,13 +28,8 @@ export default function NovoAgendamentoPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    Promise.all([
-      supabase.from('clientes').select('*').eq('ativo', true).order('nome'),
-      supabase.from('profissionais').select('*').eq('ativo', true).order('nome'),
-    ]).then(([{ data: c }, { data: p }]) => {
-      setClientes((c ?? []) as Cliente[])
-      setProfissionais((p ?? []) as Profissional[])
-    })
+    supabase.from('clientes').select('*').eq('ativo', true).order('nome')
+      .then(({ data: c }) => setClientes((c ?? []) as Cliente[]))
   }, [])
 
   const clienteSelecionado = clientes.find(c => c.id === clienteId)
@@ -48,7 +40,7 @@ export default function NovoAgendamentoPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (!clienteId || !profissionalId || !data || !hora) {
+    if (!clienteId || !data || !hora) {
       setError('Preencha todos os campos obrigatórios.')
       return
     }
@@ -56,7 +48,6 @@ export default function NovoAgendamentoPage() {
     const supabase = createClient()
     const { error: err } = await supabase.from('agendamentos').insert({
       cliente_id: clienteId,
-      profissional_id: profissionalId,
       servico_realizado: servico || null,
       data_hora: `${data}T${hora}:00`,
       status: 'agendado',
@@ -116,23 +107,6 @@ export default function NovoAgendamentoPage() {
                   </ul>
                 )}
               </div>
-            </div>
-
-            {/* Profissional */}
-            <div className="space-y-2">
-              <Label>Profissional <span className="text-red-500">*</span></Label>
-              <Select value={profissionalId} onValueChange={v => setProfissionalId(v ?? '')}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o profissional..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {profissionais.map(p => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nome}{p.especialidade ? ` — ${p.especialidade}` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             {/* Serviço — texto livre */}

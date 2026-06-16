@@ -56,7 +56,7 @@ export default function AgendamentosPage() {
     setLoading(true)
     const { data } = await supabase
       .from('agendamentos')
-      .select('*, cliente:clientes(nome), profissional:profissionais(nome), servico:servicos(nome)')
+      .select('*, cliente:clientes(nome)')
       .order('data_hora', { ascending: false })
     setAgendamentos((data ?? []) as Agendamento[])
     setLoading(false)
@@ -91,7 +91,7 @@ export default function AgendamentosPage() {
 
   function abrirConcluir(ag: Agendamento) {
     setAgendamentoAtivo(ag)
-    setServicoRealizado(ag.servico_realizado ?? ag.servico?.nome ?? '')
+    setServicoRealizado(ag.servico_realizado ?? '')
     setProdutosUsados([])
     setFormaPagamento('')
     setValorCobrado(String(ag.valor_cobrado ?? '0'))
@@ -156,7 +156,7 @@ export default function AgendamentosPage() {
   }
 
   const nomeProcedimento = (a: Agendamento) =>
-    a.servico_realizado ?? a.servico?.nome ?? '—'
+    a.servico_realizado ?? '—'
 
   const statusFiltros = ['todos', 'agendado', 'confirmado', 'concluido', 'cancelado']
 
@@ -225,7 +225,6 @@ export default function AgendamentosPage() {
               <TableHead>Data/Hora</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Serviço</TableHead>
-              <TableHead>Profissional</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Valor</TableHead>
               <TableHead>Pagamento</TableHead>
@@ -235,11 +234,11 @@ export default function AgendamentosPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-10 text-gray-400">Carregando...</TableCell>
+                <TableCell colSpan={7} className="text-center py-10 text-gray-400">Carregando...</TableCell>
               </TableRow>
             ) : agendamentosFiltrados.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-10 text-gray-400">Nenhum agendamento encontrado.</TableCell>
+                <TableCell colSpan={7} className="text-center py-10 text-gray-400">Nenhum agendamento encontrado.</TableCell>
               </TableRow>
             ) : agendamentosFiltrados.map(a => (
               <TableRow key={a.id}>
@@ -251,7 +250,6 @@ export default function AgendamentosPage() {
                 </TableCell>
                 <TableCell>{a.cliente?.nome ?? '—'}</TableCell>
                 <TableCell>{nomeProcedimento(a)}</TableCell>
-                <TableCell>{a.profissional?.nome ?? '—'}</TableCell>
                 <TableCell>
                   <span className={`px-2 py-0.5 rounded-full text-xs border font-medium ${STATUS_COLORS[a.status]}`}>
                     {STATUS_LABELS[a.status]}
