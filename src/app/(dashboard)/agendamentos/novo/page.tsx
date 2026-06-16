@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Cliente, Profissional, Servico } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
@@ -81,9 +81,9 @@ export default function NovoAgendamentoPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/agendamentos"><ArrowLeft className="h-4 w-4" /></Link>
-        </Button>
+        <Link href="/agendamentos" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
         <h1 className="text-2xl font-semibold text-gray-800">Novo Agendamento</h1>
       </div>
 
@@ -131,7 +131,7 @@ export default function NovoAgendamentoPage() {
             {/* Profissional */}
             <div className="space-y-2">
               <Label>Profissional <span className="text-red-500">*</span></Label>
-              <Select value={profissionalId} onValueChange={setProfissionalId}>
+              <Select value={profissionalId} onValueChange={(v) => setProfissionalId(v ?? '')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o profissional..." />
                 </SelectTrigger>
@@ -148,7 +148,7 @@ export default function NovoAgendamentoPage() {
             {/* Serviço */}
             <div className="space-y-2">
               <Label>Serviço <span className="text-red-500">*</span></Label>
-              <Select value={servicoId} onValueChange={handleServicoChange}>
+              <Select value={servicoId} onValueChange={(v) => { if (v) handleServicoChange(v) }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o serviço..." />
                 </SelectTrigger>
@@ -166,11 +166,7 @@ export default function NovoAgendamentoPage() {
             {valorCobrado !== null && (
               <div className="space-y-2">
                 <Label>Valor do Serviço</Label>
-                <Input
-                  value={`R$ ${valorCobrado.toFixed(2)}`}
-                  readOnly
-                  className="bg-gray-50 text-gray-500 cursor-default"
-                />
+                <Input value={`R$ ${valorCobrado.toFixed(2)}`} readOnly className="bg-gray-50 text-gray-500 cursor-default" />
               </div>
             )}
 
@@ -204,9 +200,7 @@ export default function NovoAgendamentoPage() {
               <Button type="submit" disabled={loading}>
                 {loading ? 'Salvando...' : 'Salvar Agendamento'}
               </Button>
-              <Button type="button" variant="outline" asChild>
-                <Link href="/agendamentos">Cancelar</Link>
-              </Button>
+              <Link href="/agendamentos" className={buttonVariants({ variant: 'outline' })}>Cancelar</Link>
             </div>
           </form>
         </CardContent>

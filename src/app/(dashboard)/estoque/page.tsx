@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -23,18 +23,14 @@ export default async function EstoquePage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Estoque</h1>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/estoque/movimentacoes">
-              <ClipboardList className="h-4 w-4 mr-2" />
-              Movimentações
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/estoque/novo">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Produto
-            </Link>
-          </Button>
+          <Link href="/estoque/movimentacoes" className={buttonVariants({ variant: 'outline' })}>
+            <ClipboardList className="h-4 w-4 mr-2" />
+            Movimentações
+          </Link>
+          <Link href="/estoque/novo" className={buttonVariants()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Produto
+          </Link>
         </div>
       </div>
 
@@ -90,12 +86,12 @@ export default async function EstoquePage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" className="text-xs h-7 px-2" asChild>
-                        <Link href={`/estoque/${p.id}/entrada`}>Entrada</Link>
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-xs h-7 px-2" asChild>
-                        <Link href={`/estoque/${p.id}/editar`}>Editar</Link>
-                      </Button>
+                      <Link href={`/estoque/${p.id}/entrada`} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+                        Entrada
+                      </Link>
+                      <Link href={`/estoque/${p.id}/editar`} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+                        Editar
+                      </Link>
                     </div>
                   </TableCell>
                 </TableRow>

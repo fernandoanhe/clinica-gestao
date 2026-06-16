@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
@@ -42,9 +42,9 @@ export default function NovoServicoPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/servicos"><ArrowLeft className="h-4 w-4" /></Link>
-        </Button>
+        <Link href="/servicos" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
         <h1 className="text-2xl font-semibold text-gray-800">Novo Serviço</h1>
       </div>
 
@@ -68,34 +68,17 @@ export default function NovoServicoPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Duração (min) <span className="text-red-500">*</span></Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={duracaoMinutos}
-                  onChange={e => setDuracaoMinutos(e.target.value)}
-                  placeholder="60"
-                />
+                <Input type="number" min="1" value={duracaoMinutos} onChange={e => setDuracaoMinutos(e.target.value)} placeholder="60" />
               </div>
               <div className="space-y-2">
                 <Label>Preço (R$) <span className="text-red-500">*</span></Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={preco}
-                  onChange={e => setPreco(e.target.value)}
-                  placeholder="0.00"
-                />
+                <Input type="number" min="0" step="0.01" value={preco} onChange={e => setPreco(e.target.value)} placeholder="0.00" />
               </div>
             </div>
-
             {error && <p className="text-sm text-red-500">{error}</p>}
-
             <div className="flex gap-3 pt-1">
               <Button type="submit" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</Button>
-              <Button type="button" variant="outline" asChild>
-                <Link href="/servicos">Cancelar</Link>
-              </Button>
+              <Link href="/servicos" className={buttonVariants({ variant: 'outline' })}>Cancelar</Link>
             </div>
           </form>
         </CardContent>

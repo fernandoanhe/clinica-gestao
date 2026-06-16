@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ArrowLeft } from 'lucide-react'
@@ -30,9 +30,9 @@ export default async function MovimentacoesPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/estoque"><ArrowLeft className="h-4 w-4" /></Link>
-        </Button>
+        <Link href="/estoque" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
         <h1 className="text-2xl font-semibold text-gray-800">Movimentações de Estoque</h1>
       </div>
 

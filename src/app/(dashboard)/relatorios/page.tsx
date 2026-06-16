@@ -17,7 +17,6 @@ export default async function RelatoriosPage() {
   const fimMes = new Date(ano, mes, 0).toISOString().split('T')[0]
   const inicioMesTs = `${inicioMes}T00:00:00`
   const fimMesTs = `${fimMes}T23:59:59`
-
   const nomeMes = hoje.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })
 
   const [
@@ -51,18 +50,18 @@ export default async function RelatoriosPage() {
       .eq('ativo', true),
   ])
 
-  // --- Ticket médio ---
+  // Ticket médio
   const nAtend = transacoesAtend?.length ?? 0
   const totalAtend = transacoesAtend?.reduce((s, t) => s + Number(t.valor), 0) ?? 0
   const ticketMedio = nAtend > 0 ? totalAtend / nAtend : 0
 
-  // --- Ranking de serviços ---
+  // Ranking de serviços
   type ServicoAcc = { nome: string; count: number; receita: number }
   const servicosMap: Record<string, ServicoAcc> = {}
 
   agendamentos?.forEach(a => {
     const id = a.servico_id as string
-    const servico = a.servico as { nome: string } | null
+    const servico = (a.servico as unknown) as { nome: string } | null
     const nome = servico?.nome ?? 'Desconhecido'
     if (!servicosMap[id]) servicosMap[id] = { nome, count: 0, receita: 0 }
     servicosMap[id].count++
@@ -71,13 +70,13 @@ export default async function RelatoriosPage() {
 
   const rankingServicos = Object.values(servicosMap).sort((a, b) => b.count - a.count)
 
-  // --- Produtos consumidos ---
+  // Produtos consumidos
   type ProdutoAcc = { nome: string; quantidade: number; custoTotal: number }
   const produtosMap: Record<string, ProdutoAcc> = {}
 
   movimentacoes?.forEach(m => {
     const id = m.produto_id as string
-    const produto = m.produto as { nome: string; custo_unitario: number } | null
+    const produto = (m.produto as unknown) as { nome: string; custo_unitario: number } | null
     const nome = produto?.nome ?? 'Desconhecido'
     const custo = Number(m.custo_unitario ?? produto?.custo_unitario ?? 0)
     if (!produtosMap[id]) produtosMap[id] = { nome, quantidade: 0, custoTotal: 0 }
@@ -101,14 +100,18 @@ export default async function RelatoriosPage() {
     {
       title: 'Serviço Mais Realizado',
       value: servicoTopo?.nome ?? '—',
-      sub: servicoTopo ? `${servicoTopo.count} realização${servicoTopo.count > 1 ? 'ões' : ''} · ${fmt(servicoTopo.receita)}` : 'Nenhum concluído no mês',
+      sub: servicoTopo
+        ? `${servicoTopo.count} realização${servicoTopo.count > 1 ? 'ões' : ''} · ${fmt(servicoTopo.receita)}`
+        : 'Nenhum concluído no mês',
       icon: Star,
       color: 'text-yellow-500',
     },
     {
       title: 'Produto Mais Consumido',
       value: produtoTopo?.nome ?? '—',
-      sub: produtoTopo ? `${produtoTopo.quantidade} unid. · custo ${fmt(produtoTopo.custoTotal)}` : 'Nenhuma saída no mês',
+      sub: produtoTopo
+        ? `${produtoTopo.quantidade} unid. · custo ${fmt(produtoTopo.custoTotal)}`
+        : 'Nenhuma saída no mês',
       icon: Package,
       color: 'text-orange-500',
     },
@@ -128,7 +131,6 @@ export default async function RelatoriosPage() {
         <p className="text-sm text-gray-500 mt-1 capitalize">{nomeMes}</p>
       </div>
 
-      {/* Cards de indicadores */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
         {cards.map(({ title, value, sub, icon: Icon, color }) => (
           <Card key={title}>
@@ -145,7 +147,6 @@ export default async function RelatoriosPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Ranking de serviços */}
         <div>
           <h2 className="text-base font-semibold text-gray-700 mb-3">
             Ranking de Serviços — {nomeMes}
@@ -176,9 +177,7 @@ export default async function RelatoriosPage() {
                         {s.count}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right text-green-600 font-medium">
-                      {fmt(s.receita)}
-                    </TableCell>
+                    <TableCell className="text-right text-green-600 font-medium">{fmt(s.receita)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -186,7 +185,6 @@ export default async function RelatoriosPage() {
           </Card>
         </div>
 
-        {/* Produtos mais consumidos */}
         <div>
           <h2 className="text-base font-semibold text-gray-700 mb-3">
             Produtos Consumidos — {nomeMes}
@@ -217,9 +215,7 @@ export default async function RelatoriosPage() {
                         {p.quantidade % 1 === 0 ? p.quantidade : p.quantidade.toFixed(2)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right text-red-500 font-medium">
-                      {fmt(p.custoTotal)}
-                    </TableCell>
+                    <TableCell className="text-right text-red-500 font-medium">{fmt(p.custoTotal)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

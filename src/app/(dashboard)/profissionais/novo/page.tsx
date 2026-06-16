@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
@@ -41,9 +41,9 @@ export default function NovoProfissionalPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/profissionais"><ArrowLeft className="h-4 w-4" /></Link>
-        </Button>
+        <Link href="/profissionais" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
         <h1 className="text-2xl font-semibold text-gray-800">Novo Profissional</h1>
       </div>
 
@@ -66,14 +66,10 @@ export default function NovoProfissionalPage() {
               <Label>E-mail</Label>
               <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@exemplo.com" />
             </div>
-
             {error && <p className="text-sm text-red-500">{error}</p>}
-
             <div className="flex gap-3 pt-1">
               <Button type="submit" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</Button>
-              <Button type="button" variant="outline" asChild>
-                <Link href="/profissionais">Cancelar</Link>
-              </Button>
+              <Link href="/profissionais" className={buttonVariants({ variant: 'outline' })}>Cancelar</Link>
             </div>
           </form>
         </CardContent>

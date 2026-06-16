@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Plus } from 'lucide-react'
@@ -18,12 +18,10 @@ export default async function ClientesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Clientes</h1>
-        <Button asChild>
-          <Link href="/clientes/novo">
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Cliente
-          </Link>
-        </Button>
+        <Link href="/clientes/novo" className={buttonVariants()}>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Cliente
+        </Link>
       </div>
 
       <Card>

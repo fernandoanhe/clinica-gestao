@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Transacao } from '@/types'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft } from 'lucide-react'
 import {
@@ -22,7 +22,6 @@ import {
 } from 'recharts'
 
 const MESES_ABREV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
-
 const PIE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#64748b']
 
 const FORMA_LABELS: Record<string, string> = {
@@ -56,19 +55,13 @@ export default function GraficoPage() {
       })
   }, [])
 
-  // Últimos 6 meses
   const last6 = Array.from({ length: 6 }, (_, i) => {
     const d = new Date()
     d.setDate(1)
     d.setMonth(d.getMonth() - (5 - i))
-    return {
-      year: d.getFullYear(),
-      month: d.getMonth() + 1,
-      label: MESES_ABREV[d.getMonth()],
-    }
+    return { year: d.getFullYear(), month: d.getMonth() + 1, label: MESES_ABREV[d.getMonth()] }
   })
 
-  // Dados do gráfico de barras
   const barData = last6.map(m => {
     const prefix = `${m.year}-${m.month.toString().padStart(2, '0')}`
     const receitas = transacoes
@@ -80,7 +73,6 @@ export default function GraficoPage() {
     return { mes: m.label, Receitas: receitas, Despesas: despesas }
   })
 
-  // Dados do gráfico de pizza (receitas por forma de pagamento)
   const pagMap: Record<string, number> = {}
   transacoes
     .filter(t => t.tipo === 'receita')
@@ -96,22 +88,19 @@ export default function GraficoPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400 text-sm">
-        Carregando...
-      </div>
+      <div className="flex items-center justify-center py-20 text-gray-400 text-sm">Carregando...</div>
     )
   }
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/financeiro"><ArrowLeft className="h-4 w-4" /></Link>
-        </Button>
+        <Link href="/financeiro" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
         <h1 className="text-2xl font-semibold text-gray-800">Gráficos Financeiros</h1>
       </div>
 
-      {/* Gráfico de barras — Receitas x Despesas */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-base font-medium text-gray-700">
@@ -128,10 +117,7 @@ export default function GraficoPage() {
                 tickFormatter={v => `R$ ${Number(v).toLocaleString('pt-BR')}`}
                 width={80}
               />
-              <Tooltip
-                formatter={(value: number) => [fmt(value), '']}
-                contentStyle={{ fontSize: 12, borderRadius: 8 }}
-              />
+              <Tooltip formatter={(value) => fmt(Number(value))} />
               <Legend wrapperStyle={{ fontSize: 13 }} />
               <Bar dataKey="Receitas" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={48} />
               <Bar dataKey="Despesas" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={48} />
@@ -140,7 +126,6 @@ export default function GraficoPage() {
         </CardContent>
       </Card>
 
-      {/* Gráfico de pizza — Forma de pagamento */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-medium text-gray-700">
@@ -169,10 +154,7 @@ export default function GraficoPage() {
                       <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(value: number) => [fmt(value), '']}
-                    contentStyle={{ fontSize: 12, borderRadius: 8 }}
-                  />
+                  <Tooltip formatter={(value) => fmt(Number(value))} />
                 </PieChart>
               </ResponsiveContainer>
 

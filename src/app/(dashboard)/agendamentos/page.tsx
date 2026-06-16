@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Agendamento } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -106,12 +106,10 @@ export default function AgendamentosPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Agendamentos</h1>
-        <Button asChild>
-          <Link href="/agendamentos/novo">
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Agendamento
-          </Link>
-        </Button>
+        <Link href="/agendamentos/novo" className={buttonVariants()}>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Agendamento
+        </Link>
       </div>
 
       {/* Hoje em destaque */}
@@ -206,32 +204,20 @@ export default function AgendamentosPage() {
                 <TableCell className="text-right">
                   <div className="flex gap-1 justify-end">
                     {a.status === 'agendado' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-yellow-700 border-yellow-200 hover:bg-yellow-50 text-xs h-7 px-2"
-                        onClick={() => confirmar(a.id)}
-                      >
+                      <Button size="sm" variant="outline" className="text-yellow-700 border-yellow-200 hover:bg-yellow-50 text-xs h-7 px-2"
+                        onClick={() => confirmar(a.id)}>
                         Confirmar
                       </Button>
                     )}
                     {(a.status === 'agendado' || a.status === 'confirmado') && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-green-700 border-green-200 hover:bg-green-50 text-xs h-7 px-2"
-                        onClick={() => abrirConcluir(a)}
-                      >
+                      <Button size="sm" variant="outline" className="text-green-700 border-green-200 hover:bg-green-50 text-xs h-7 px-2"
+                        onClick={() => abrirConcluir(a)}>
                         Concluir
                       </Button>
                     )}
                     {(a.status === 'agendado' || a.status === 'confirmado') && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 border-red-200 hover:bg-red-50 text-xs h-7 px-2"
-                        onClick={() => cancelar(a.id)}
-                      >
+                      <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 text-xs h-7 px-2"
+                        onClick={() => cancelar(a.id)}>
                         Cancelar
                       </Button>
                     )}
@@ -252,7 +238,7 @@ export default function AgendamentosPage() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Forma de Pagamento</Label>
-              <Select value={formaPagamento} onValueChange={setFormaPagamento}>
+              <Select value={formaPagamento} onValueChange={(v) => setFormaPagamento(v ?? '')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
@@ -266,13 +252,7 @@ export default function AgendamentosPage() {
             </div>
             <div className="space-y-2">
               <Label>Valor Cobrado (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={valorCobrado}
-                onChange={e => setValorCobrado(e.target.value)}
-              />
+              <Input type="number" step="0.01" min="0" value={valorCobrado} onChange={e => setValorCobrado(e.target.value)} />
             </div>
           </div>
           <DialogFooter>

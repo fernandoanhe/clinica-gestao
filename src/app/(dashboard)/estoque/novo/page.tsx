@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
@@ -49,9 +49,9 @@ export default function NovoProdutoPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/estoque"><ArrowLeft className="h-4 w-4" /></Link>
-        </Button>
+        <Link href="/estoque" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
         <h1 className="text-2xl font-semibold text-gray-800">Novo Produto</h1>
       </div>
 
@@ -62,7 +62,6 @@ export default function NovoProdutoPage() {
               <Label>Nome <span className="text-red-500">*</span></Label>
               <Input value={nome} onChange={e => setNome(e.target.value)} placeholder="Nome do produto" />
             </div>
-
             <div className="space-y-2">
               <Label>Descrição</Label>
               <textarea
@@ -73,7 +72,6 @@ export default function NovoProdutoPage() {
                 className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 resize-none"
               />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Categoria</Label>
@@ -81,7 +79,7 @@ export default function NovoProdutoPage() {
               </div>
               <div className="space-y-2">
                 <Label>Unidade <span className="text-red-500">*</span></Label>
-                <Select value={unidade} onValueChange={setUnidade}>
+                <Select value={unidade} onValueChange={(v) => setUnidade(v ?? '')}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
@@ -94,50 +92,24 @@ export default function NovoProdutoPage() {
                 </Select>
               </div>
             </div>
-
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Qtd Inicial</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={quantidadeInicial}
-                  onChange={e => setQuantidadeInicial(e.target.value)}
-                  placeholder="0"
-                />
+                <Input type="number" min="0" step="0.01" value={quantidadeInicial} onChange={e => setQuantidadeInicial(e.target.value)} placeholder="0" />
               </div>
               <div className="space-y-2">
                 <Label>Qtd Mínima</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={quantidadeMinima}
-                  onChange={e => setQuantidadeMinima(e.target.value)}
-                  placeholder="0"
-                />
+                <Input type="number" min="0" step="0.01" value={quantidadeMinima} onChange={e => setQuantidadeMinima(e.target.value)} placeholder="0" />
               </div>
               <div className="space-y-2">
                 <Label>Custo Unit. (R$)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={custoUnitario}
-                  onChange={e => setCustoUnitario(e.target.value)}
-                  placeholder="0.00"
-                />
+                <Input type="number" min="0" step="0.01" value={custoUnitario} onChange={e => setCustoUnitario(e.target.value)} placeholder="0.00" />
               </div>
             </div>
-
             {error && <p className="text-sm text-red-500">{error}</p>}
-
             <div className="flex gap-3 pt-1">
               <Button type="submit" disabled={loading}>{loading ? 'Salvando...' : 'Salvar'}</Button>
-              <Button type="button" variant="outline" asChild>
-                <Link href="/estoque">Cancelar</Link>
-              </Button>
+              <Link href="/estoque" className={buttonVariants({ variant: 'outline' })}>Cancelar</Link>
             </div>
           </form>
         </CardContent>

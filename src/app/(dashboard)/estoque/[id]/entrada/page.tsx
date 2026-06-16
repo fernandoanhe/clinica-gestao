@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Produto } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
@@ -64,9 +64,9 @@ export default function EntradaEstoquePage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/estoque"><ArrowLeft className="h-4 w-4" /></Link>
-        </Button>
+        <Link href="/estoque" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
         <h1 className="text-2xl font-semibold text-gray-800">Entrada de Estoque</h1>
       </div>
 
@@ -103,7 +103,6 @@ export default function EntradaEstoquePage() {
                 </p>
               )}
             </div>
-
             <div className="space-y-2">
               <Label>Custo Unitário (R$)</Label>
               <Input
@@ -115,7 +114,6 @@ export default function EntradaEstoquePage() {
                 placeholder="0.00"
               />
             </div>
-
             <div className="space-y-2">
               <Label>Motivo (opcional)</Label>
               <Input
@@ -124,16 +122,12 @@ export default function EntradaEstoquePage() {
                 placeholder="Ex: Compra fornecedor, Reposição..."
               />
             </div>
-
             {error && <p className="text-sm text-red-500">{error}</p>}
-
             <div className="flex gap-3 pt-1">
               <Button type="submit" disabled={loading || !produto}>
                 {loading ? 'Registrando...' : 'Registrar Entrada'}
               </Button>
-              <Button type="button" variant="outline" asChild>
-                <Link href="/estoque">Cancelar</Link>
-              </Button>
+              <Link href="/estoque" className={buttonVariants({ variant: 'outline' })}>Cancelar</Link>
             </div>
           </form>
         </CardContent>
