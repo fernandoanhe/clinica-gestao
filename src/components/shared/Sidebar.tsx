@@ -1,13 +1,16 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, DollarSign, Calendar, BarChart2, LogOut } from 'lucide-react'
+import { LayoutDashboard, Package, DollarSign, Calendar, BarChart2, LogOut, Users, UserCheck, Scissors } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const nav = [
   { href: '/', label: 'Painel', icon: LayoutDashboard },
   { href: '/agendamentos', label: 'Agendamentos', icon: Calendar },
+  { href: '/clientes', label: 'Clientes', icon: Users },
+  { href: '/profissionais', label: 'Profissionais', icon: UserCheck },
+  { href: '/servicos', label: 'Serviços', icon: Scissors },
   { href: '/estoque', label: 'Estoque', icon: Package },
   { href: '/financeiro', label: 'Financeiro', icon: DollarSign },
   { href: '/relatorios', label: 'Relatórios', icon: BarChart2 },
@@ -31,7 +34,7 @@ export default function Sidebar() {
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
         {nav.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href
+          const active = href === '/' ? pathname === href : pathname.startsWith(href)
           return (
             <Link
               key={href}
