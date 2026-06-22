@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Target, Star, Package, Users, CalendarCheck, ChevronRight } from 'lucide-react'
+import { Target, Star, Package, Users, CalendarCheck, ChevronRight, BarChart } from 'lucide-react'
 
 const fmt = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
@@ -145,6 +145,20 @@ export default async function RelatoriosPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800">Análise de Agendamentos</p>
                   <p className="text-xs text-gray-400 mt-0.5">Histórico completo · tendências · procedimentos</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/relatorios/agendamentos-faturamento">
+            <Card className="hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group">
+              <CardContent className="p-4 flex items-center gap-4">
+                <span className="p-2.5 rounded-lg bg-amber-50 shrink-0">
+                  <BarChart className="h-5 w-5 text-amber-600" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800">Agendamentos × Faturamento</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Correlação mensal · barras + linha · dois eixos</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
               </CardContent>
