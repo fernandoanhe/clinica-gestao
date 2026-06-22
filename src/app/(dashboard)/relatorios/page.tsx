@@ -1,7 +1,8 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Target, Star, Package, Users } from 'lucide-react'
+import { Target, Star, Package, Users, CalendarCheck, ChevronRight } from 'lucide-react'
 
 const fmt = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
@@ -130,6 +131,28 @@ export default async function RelatoriosPage() {
         <h1 className="text-2xl font-semibold text-gray-800">Relatórios</h1>
         <p className="text-sm text-gray-500 mt-1 capitalize">{nomeMes}</p>
       </div>
+
+      {/* Análises detalhadas */}
+      <div className="mb-8">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Análises</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+          <Link href="/relatorios/agendamentos">
+            <Card className="hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group">
+              <CardContent className="p-4 flex items-center gap-4">
+                <span className="p-2.5 rounded-lg bg-blue-50 shrink-0">
+                  <CalendarCheck className="h-5 w-5 text-blue-600" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800">Análise de Agendamentos</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Histórico completo · tendências · procedimentos</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
         {cards.map(({ title, value, sub, icon: Icon, color }) => (
