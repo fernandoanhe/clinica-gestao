@@ -1,12 +1,13 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Package, DollarSign, Calendar, BarChart2, LogOut, Users, History, AreaChart, ShoppingCart } from 'lucide-react'
+import { LayoutDashboard, Package, DollarSign, Calendar, BarChart2, LogOut, Users, History, AreaChart, ShoppingCart, CalendarDays } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const nav = [
   { href: '/', label: 'Painel', icon: LayoutDashboard },
+  { href: '/agenda', label: 'Agenda', icon: CalendarDays },
   { href: '/agendamentos', label: 'Agendamentos', icon: Calendar },
   { href: '/vendas', label: 'Vendas', icon: ShoppingCart },
   { href: '/clientes', label: 'Clientes', icon: Users },
