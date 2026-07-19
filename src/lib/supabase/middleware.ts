@@ -55,7 +55,7 @@ export async function updateSession(request: NextRequest) {
         .eq('id', user.id)
         .single()
 
-      const role = perfil?.role || 'vendedor'
+      const role = perfil?.role || 'admin'
       const pathname = request.nextUrl.pathname
 
       if (role === 'vendedor') {

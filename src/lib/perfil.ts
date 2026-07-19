@@ -13,5 +13,5 @@ export async function getPerfilUsuario(): Promise<Role> {
     .eq('id', user.id)
     .single()
 
-  return (data?.role as Role) ?? 'vendedor'
+  return (data?.role as Role) ?? 'admin'
 }
