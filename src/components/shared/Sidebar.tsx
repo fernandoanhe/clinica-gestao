@@ -4,21 +4,22 @@ import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Package, DollarSign, Calendar, BarChart2, LogOut, Users, History, AreaChart, ShoppingCart, CalendarDays } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import type { Role } from '@/lib/perfil'
 
 const nav = [
-  { href: '/', label: 'Painel', icon: LayoutDashboard },
-  { href: '/agenda', label: 'Agenda', icon: CalendarDays },
-  { href: '/agendamentos', label: 'Agendamentos', icon: Calendar },
-  { href: '/vendas', label: 'Vendas', icon: ShoppingCart },
-  { href: '/clientes', label: 'Clientes', icon: Users },
-  { href: '/estoque', label: 'Estoque', icon: Package },
-  { href: '/estoque/movimentacoes', label: 'Movimentações', icon: History, sub: true },
-  { href: '/financeiro', label: 'Financeiro', icon: DollarSign },
-  { href: '/financeiro/grafico', label: 'Gráficos', icon: AreaChart, sub: true },
-  { href: '/relatorios', label: 'Relatórios', icon: BarChart2 },
+  { href: '/', label: 'Painel', icon: LayoutDashboard, admin: true },
+  { href: '/agenda', label: 'Agenda', icon: CalendarDays, admin: false },
+  { href: '/agendamentos', label: 'Agendamentos', icon: Calendar, admin: true },
+  { href: '/vendas', label: 'Vendas', icon: ShoppingCart, admin: false },
+  { href: '/clientes', label: 'Clientes', icon: Users, admin: false },
+  { href: '/estoque', label: 'Estoque', icon: Package, admin: true },
+  { href: '/estoque/movimentacoes', label: 'Movimentações', icon: History, sub: true, admin: true },
+  { href: '/financeiro', label: 'Financeiro', icon: DollarSign, admin: true },
+  { href: '/financeiro/grafico', label: 'Gráficos', icon: AreaChart, sub: true, admin: true },
+  { href: '/relatorios', label: 'Relatórios', icon: BarChart2, admin: true },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ role }: { role: Role }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -28,6 +29,8 @@ export default function Sidebar() {
     router.push('/auth/login')
   }
 
+  const visibleNav = role === 'admin' ? nav : nav.filter(item => !item.admin)
+
   return (
     <aside className="w-56 bg-white border-r border-gray-100 flex flex-col">
       <div className="px-5 py-5 border-b border-gray-100">
@@ -35,7 +38,7 @@ export default function Sidebar() {
         <p className="text-xs text-gray-400 mt-0.5">Sistema de gestão</p>
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {nav.map(({ href, label, icon: Icon, sub }) => {
+        {visibleNav.map(({ href, label, icon: Icon, sub }) => {
           const active = href === '/' ? pathname === href : pathname.startsWith(href)
           return (
             <Link
